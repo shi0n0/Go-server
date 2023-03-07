@@ -2,20 +2,30 @@ package main
 
 import (
 	"html/template"
-	"log"
 	"net/http"
+	"math/rand"
+	"time"
 )
 
-func index(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("index.html")
-	if err != nil {
-		log.Println(err)
-	}
-	t.Execute(w, "こんにちは！！")
-}
 
 func main() {
-	http.HandleFunc("/", index)
-	http.ListenAndServe(":8080" , nil)
+	// テンプレートをパースする
+	tmpl := template.Must(template.ParseFiles("index.html"))
+
+	// HTTPハンドラーを定義する
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// ランダムな数字を生成する
+		rand.Seed(time.Now().UnixNano())
+		number := rand.Intn(101)
+
+		// HTMLテンプレートにランダムな数字を渡す
+		if err := tmpl.Execute(w, number); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	// Webサーバーを開始する
+	http.ListenAndServe(":8080", nil)
 }
 
